@@ -1,0 +1,14 @@
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\bin\Debug\DeviceLocator.dll
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\bin\Debug\DeviceLocator.pdb
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\bin\Debug\DeviceLocator.dll.mdb
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\bin\Debug\DeviceLocator.DeviceLocator.apk
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\bin\Debug\DeviceLocator.DeviceLocator-Signed.apk
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\DeviceLocator.dll
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\DeviceLocator.pdb
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\android\bin\DeviceLocator.DeviceLocator.apk
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\res\layout\main.xml
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\res\values\strings.xml
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\res\drawable\icon.png
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\R.cs.flag
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\uploadflags.txt
+E:\work\Mobileapps\DeviceLocator\DeviceLocator\obj\Debug\DeviceLocator.csprojResolveAssemblyReference.cache
