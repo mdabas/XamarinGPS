@@ -1,127 +1,231 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
 using Android.App;
 using Android.Content;
+using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.OS;
-using Android.Locations;
+using Android.Gms.Common;
+using AndroidUri = Android.Net.Uri;
 using Android.Util;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
+using Android.Gms.Maps.Model;
+using Android.Gms.Maps;
 namespace DeviceLocator
 {
     [Activity(Label = "DeviceLocator", MainLauncher = true, Icon = "@drawable/icon")]
-    public class MainActivity : Activity,ILocationListener
+    public class MainActivity : ListActivity
     {
-        static readonly string LogTag = "DeviceLocator";
-        Location _currentLocation;
-        LocationManager _locationManager;
-        TextView _locationText;
-        TextView _addressText;
-        String _locationProvider;
-        int count = 1;
-        public void OnLocationChanged(Location location)
-        {
-            _currentLocation = location;
-            if (_currentLocation == null)
-            {
-                _locationText.Text = "Unable to determine your location.";
-            }
-            else
-            {
-                _locationText.Text = String.Format("{0},{1}", _currentLocation.Latitude, _currentLocation.Longitude);
-            }
-        }
-
-        public void OnProviderDisabled(string provider)
-        {
-        }
-
-        public void OnProviderEnabled(string provider)
-        {
-        }
-
-        public void OnStatusChanged(string provider, Availability status, Bundle extras)
-        {
-            Log.Debug(LogTag, "{0}, {1}", provider, status);
-        }
-
+        public static readonly int InstallGooglePlayServicesId = 1000;
+        static readonly string LogTag = "SimpleMapDemo";
+        private List<SampleActivity> _activities;
+        private bool _isGooglePlayServicesInstalled;
         protected override void OnCreate(Bundle bundle)
         {
-            Log.Debug(LogTag, "{0}", "OnCreate started");
             base.OnCreate(bundle);
-            SetContentView(Resource.Layout.Main);
-
-            _addressText = FindViewById<TextView>(Resource.Id.address_text);
-            _locationText = FindViewById<TextView>(Resource.Id.location_text);
-            FindViewById<TextView>(Resource.Id.get_address_button).Click += AddressButton_OnClick;
-
-            InitializeLocationManager();
-            Log.Debug(LogTag, "{0}", "OnCreate ended");
+            _isGooglePlayServicesInstalled = TestIfGooglePlayServicesIsInstalled();             
+            InitializeListView();
         }
 
-        void InitializeLocationManager()
+        private void InitializeListView()
         {
-            _locationManager = (LocationManager)GetSystemService(LocationService);
-            Criteria criteriaForLocationService = new Criteria
+            if (_isGooglePlayServicesInstalled)
             {
-                Accuracy = Accuracy.Fine
-            };
-            IList<string> acceptableLocationProviders = _locationManager.GetProviders(criteriaForLocationService, true);
+                _activities = new List<SampleActivity>
+				{
+					new SampleActivity(Resource.String.mapsAppText, Resource.String.mapsAppTextDescription, typeof(StaticMapActivity)),
+					new SampleActivity(Resource.String.basic_map, Resource.String.basic_map_description, typeof(SimpleMapActivity)),
+					new SampleActivity(Resource.String.activity_label_samplemap, Resource.String.showMapActivityDescription, typeof(LookAndFeelActivity)),
+					
+				};
 
-            if (acceptableLocationProviders.Any())
-            {
-                _locationProvider = acceptableLocationProviders.First();
+                ListAdapter = new SimpleMapDemoActivityAdapter(this, _activities);
             }
             else
             {
-                _locationProvider = String.Empty;
+                Log.Error("MainActivity", "Google Play Services is not installed");
+                ListAdapter = new SimpleMapDemoActivityAdapter(this, null);
+            }
+        }
+        private void InitMap()
+        {
+            LatLng location = new LatLng(50.897778, 3.013333);
+            
+            CameraPosition.Builder builder = CameraPosition.InvokeBuilder();
+            builder.Target(location);
+            builder.Zoom(18);
+            builder.Bearing(155);
+            builder.Tilt(65);
+            CameraPosition cameraPosition = builder.Build();
+            CameraUpdate cameraUpdate = CameraUpdateFactory.NewCameraPosition(cameraPosition);
+              MapFragment mapFrag = (MapFragment)FragmentManager.FindFragmentByTag("map");
+           // MapFragment mapFrag = (MapFragment)FragmentManager.FindFragmentById(Resource.Id.mapZoom);
+
+            GoogleMap map = mapFrag.Map;
+            if (map != null)
+            {
+                map.MoveCamera(cameraUpdate);
+                MarkerOptions markerOpt1 = new MarkerOptions();
+                markerOpt1.SetPosition(location);
+                markerOpt1.SetTitle("My Location");
+                map.AddMarker(markerOpt1);
+            }
+
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
+        {
+            switch (resultCode)
+            {
+                case Result.Ok:
+                    // Try again.
+                    _isGooglePlayServicesInstalled = true;
+                    break;
+
+                default:
+                    Log.Debug("MainActivity", "Unknown resultCode {0} for request {1}", resultCode, requestCode);
+                    break;
             }
         }
 
-        protected override void OnResume()
+        private bool TestIfGooglePlayServicesIsInstalled()
         {
-            base.OnResume();
-            _locationManager.RequestLocationUpdates(_locationProvider, 0, 0, this);
-            Log.Debug(LogTag, "Listening for location updates using " + _locationProvider + ".");
-        }
-
-        protected override void OnPause()
-        {
-            base.OnPause();
-            _locationManager.RemoveUpdates(this);
-            Log.Debug(LogTag, "No longer listening for location updates.");
-        }
-
-        async void AddressButton_OnClick(object sender, EventArgs eventArgs)
-        {
-            if (_currentLocation == null)
+            int queryResult = GooglePlayServicesUtil.IsGooglePlayServicesAvailable(this);
+            if (queryResult == ConnectionResult.Success)
             {
-                _addressText.Text = "Can't determine the current address.";
-                return;
+                Log.Info("SimpleMapDemo", "Google Play Services is installed on this device.");
+                return true;
             }
 
-            Geocoder geocoder = new Geocoder(this);
-            IList<Address> addressList = await geocoder.GetFromLocationAsync(_currentLocation.Latitude, _currentLocation.Longitude, 10);
-
-            Address address = addressList.FirstOrDefault();
-            if (address != null)
+            if (GooglePlayServicesUtil.IsUserRecoverableError(queryResult))
             {
-                StringBuilder deviceAddress = new StringBuilder();
-                for (int i = 0; i < address.MaxAddressLineIndex; i++)
-                {
-                    deviceAddress.Append(address.GetAddressLine(i))
-                                 .AppendLine(",");
-                }
-                _addressText.Text = deviceAddress.ToString();
+                string errorString = GooglePlayServicesUtil.GetErrorString(queryResult);
+                Log.Error("SimpleMapDemo", "There is a problem with Google Play Services on this device: {0} - {1}", queryResult, errorString);
+                Dialog errorDialog = GooglePlayServicesUtil.GetErrorDialog(queryResult, this, InstallGooglePlayServicesId);
+                ErrorDialogFragment dialogFrag = new ErrorDialogFragment(errorDialog);
+
+                dialogFrag.Show(FragmentManager, "GooglePlayServicesDialog");
+            }
+            return false;
+        }
+        protected override void OnListItemClick(ListView l, View v, int position, long id)
+        {
+            //if (position == 0)
+            //{
+            //    string geoLocation = "geo:42.374260,-71.120824";
+
+                
+
+            //    // string geoLocation = "geo:" + _currentLocation.Latitude + "," + _currentLocation.Longitude;
+            //    AndroidUri geoUri = AndroidUri.Parse(geoLocation);
+            //    Intent mapIntent = new Intent(Intent.ActionView, geoUri);
+
+            //    StartActivity(mapIntent);
+
+            //    return;
+            //}
+
+            SampleActivity activity1 = _activities[position];
+            activity1.Start(this);
+        }
+    }
+
+    internal class ErrorDialogFragment : DialogFragment
+    {
+        public ErrorDialogFragment(Dialog dialog)
+        {
+            Dialog = dialog;
+        }
+
+        public Dialog Dialog { get; private set; }
+
+        public override Dialog OnCreateDialog(Bundle savedInstanceState)
+        {
+            return Dialog;
+
+        }
+
+
+    }
+
+    internal class SimpleMapDemoActivityAdapter : BaseAdapter<SampleActivity>
+    {
+        private readonly List<SampleActivity> _activities;
+        private readonly Context _context;
+
+        public SimpleMapDemoActivityAdapter(Context context, IEnumerable<SampleActivity> sampleActivities)
+        {
+            _context = context;
+            if (sampleActivities == null)
+            {
+                _activities = new List<SampleActivity>(0);
             }
             else
             {
-                _addressText.Text = "Unable to determine the address.";
+                _activities = sampleActivities.ToList();
             }
+        }
+
+        public override int Count { get { return _activities.Count; } }
+
+        public override SampleActivity this[int position] { get { return _activities[position]; } }
+
+        public override long GetItemId(int position)
+        {
+            return position;
+        }
+
+        public override View GetView(int position, View convertView, ViewGroup parent)
+        {
+            FeatureRowHolder row = convertView as FeatureRowHolder ?? new FeatureRowHolder(_context);
+            SampleActivity sample = _activities[position];
+
+            row.UpdateFrom(sample);
+            return row;
+        }
+    }
+
+    internal class SampleActivity
+    {
+        public SampleActivity(int titleResourceId, int descriptionId, Type activityToLaunch)
+        {
+            ActivityToLaunch = activityToLaunch;
+            TitleResource = titleResourceId;
+            DescriptionResource = descriptionId;
+        }
+
+        public Type ActivityToLaunch { get; private set; }
+        public int DescriptionResource { get; private set; }
+        public int TitleResource { get; private set; }
+
+        public void Start(Activity context)
+        {
+            Intent i = new Intent(context, ActivityToLaunch);
+            context.StartActivity(i);
+        }
+    }
+
+    internal class FeatureRowHolder : FrameLayout
+    {
+        private readonly TextView _description;
+        private readonly TextView _title;
+
+        public FeatureRowHolder(Context context)
+            : base(context)
+        {
+            LayoutInflater inflater = (LayoutInflater)context.GetSystemService(Context.LayoutInflaterService);
+            View view = inflater.Inflate(Resource.Layout.Feature, this);
+            _title = view.FindViewById<TextView>(Resource.Id.title);
+            _description = view.FindViewById<TextView>(Resource.Id.description);
+        }
+
+        public void UpdateFrom(SampleActivity sample)
+        {
+            _title.SetText(sample.TitleResource);
+            _description.SetText(sample.DescriptionResource);
         }
     }
 }
-

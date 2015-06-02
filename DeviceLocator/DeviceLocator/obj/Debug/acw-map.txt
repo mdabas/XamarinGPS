@@ -1,4 +1,0 @@
-DeviceLocator.MainActivity, DeviceLocator;md57c24d037405e719bc251ae79be967a3a.MainActivity
-DeviceLocator.MainActivity, DeviceLocator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null;md57c24d037405e719bc251ae79be967a3a.MainActivity
-DeviceLocator.MainActivity;md57c24d037405e719bc251ae79be967a3a.MainActivity
-devicelocator.MainActivity;md57c24d037405e719bc251ae79be967a3a.MainActivity

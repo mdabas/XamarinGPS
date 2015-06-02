@@ -1,5 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="Hello">Hello World, Click Me!</string>
-    <string name="ApplicationName">DeviceLocator</string>
+	<string name="hello">Show my location</string>
+	<string name="app_name">DeviceLocator</string>
+  <string name="mapsAppText" >Show multiple map points</string>
+  <string name="mapsAppTextDescription">Show few cities in USA on map.</string>
+  <string name="streetViewText" >Show Street View</string>
+  <string name="showMapActivityDescription">Show how use a MapFragment in an Activity.</string>
+  <string name="showMapWithOverlaysDescription">Shows how to use overlays in a an Activity.</string>
+  <string name="activity_label_samplemap" >Feature customization</string>
+  <string name="activity_label_mapwithmarkers" >Map with Markers Demo</string>
+  <string name="basic_map">My location</string>
+  <string name="basic_map_description">Display the MapFragment in an AXML file.</string>
 </resources>
