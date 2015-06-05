@@ -13,6 +13,7 @@ using Android.Gms.Maps;
 using Android.Gms.Maps.Model;
 using Android.Gms.Location;
 using System.Drawing;
+using DeviceLocator.Core;
 namespace DeviceLocator
 {
     [Activity(Label = "Static Map Points")]
@@ -26,34 +27,37 @@ namespace DeviceLocator
         //                                                                        new LatLng(41.051696, -73.545667),
         //                                                                        new LatLng(41.311197, -72.902646)
            //                                                                 };
-        private static readonly LatLng[] LocationForCustomIconMarkers = new[]
-                                                                            {
-                                                                                new LatLng(37.0000, -120.0000),                                                         
-                                                                                new LatLng(34.0500, -118.2500),                                                                               
-                                                                                new LatLng(36.1215 , -115.1739 ), 
-                                                                                new LatLng (40.7500 ,  -111.8833 ),
-                                                                                new LatLng(39.7392,-104.9903),
-                                                                                new LatLng(39.0997,- 94.5783) ,
-                                                                                new LatLng(41.8369, -87.6847),
-                                                                                new LatLng(40.7127,- 74.0059),
-                                                                                new LatLng(42.3601, -71.0589),
-                                                                            };
+        //private static readonly LatLng[] LocationForCustomIconMarkers = new[]
+        //                                                                    {
+        //                                                                        new LatLng(37.0000, -120.0000),                                                         
+        //                                                                        new LatLng(34.0500, -118.2500),                                                                               
+        //                                                                        new LatLng(36.1215 , -115.1739 ), 
+        //                                                                        new LatLng (40.7500 ,  -111.8833 ),
+        //                                                                        new LatLng(39.7392,-104.9903),
+        //                                                                        new LatLng(39.0997,- 94.5783) ,
+        //                                                                        new LatLng(41.8369, -87.6847),
+        //                                                                        new LatLng(40.7127,- 74.0059),
+        //                                                                        new LatLng(42.3601, -71.0589),
+        //                                                                    };
 
-        private static readonly string[] LocationName = new[] { 
-        "California"  ,     "Los Angeles" ,"Las Vegas","Salt Lake City","Denver" ,"Kansas City" ,"Chicago","New York", "Boston",                                                                               
-                                                                            };
+        //private static readonly string[] LocationName = new[] { 
+        //"California"  ,     "Los Angeles" ,"Las Vegas","Salt Lake City","Denver" ,"Kansas City" ,"Chicago","New York", "Boston",                                                                               
+        //                                                                    };
         private string _gotoMauiMarkerId;
         private GoogleMap _map;
         private MapFragment _mapFragment;
         private Marker _polarBearMarker;
         private GroundOverlay _polarBearOverlay;
-
+        private List<ParkingLocation> parkingSlots = null;
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
-            SetContentView(Resource.Layout.Main); 
+            SetContentView(Resource.Layout.Main);
+            DeviceLocatorManager manager = new DeviceLocatorManager();
+
+            parkingSlots = manager.InitializeParkingLocationsParking();
             InitMapFragment();
-            SetupMapIfNeeded();
+           SetupMapIfNeeded();
              
         }
 
@@ -77,7 +81,7 @@ namespace DeviceLocator
             _map.MyLocationEnabled = true;
 
             // Setup a handler for when the user clicks on a marker.
-            _map.MarkerClick += MapOnMarkerClick;
+           // _map.MarkerClick += MapOnMarkerClick;
         }
 
 
@@ -88,7 +92,10 @@ namespace DeviceLocator
           //  _mapFragment = FragmentManager.FindFragmentByTag("map") as MapFragment;
              _mapFragment = FragmentManager.FindFragmentById<MapFragment>(Resource.Id.mapOverLay);
             GoogleMap map1 = _mapFragment.Map;
-
+            //if (map1 != null)
+            //{
+            //    map1.MapType = GoogleMap.MapTypeSatellite;
+            //}
             if (_mapFragment == null)
             {
                 GoogleMapOptions mapOptions = new GoogleMapOptions()
@@ -105,6 +112,7 @@ namespace DeviceLocator
             {
                 if (_mapFragment.Map == null)
                 {
+
                 }
 
             }
@@ -125,7 +133,7 @@ namespace DeviceLocator
             {
                 int index =0 ;
                 int.TryParse( marker.Id.Substring(marker.Id.Length - 1),out index);
-                string city = LocationName[index];
+                string city = parkingSlots [index].AreaName;
                 Toast.MakeText(this, String.Format("You clicked on  {0}", city), ToastLength.Short).Show();
             }
         }
@@ -170,21 +178,44 @@ namespace DeviceLocator
              .InvokeWidth(5)
              .InvokeZIndex(10)
              .Geodesic(true);
-             
-            for (int i = 0; i < LocationForCustomIconMarkers.Length; i++)
+
+            BitmapDescriptor icon = null;
+            for (int i = 0; i < parkingSlots.Count ; i++)
             {
-                BitmapDescriptor icon = BitmapDescriptorFactory.FromResource(Resource.Drawable.marker1);
+                
+                ParkingLocation parkLot = parkingSlots[i] ;
+                LatLng latLong = new LatLng(parkLot.Latitude, parkLot.Longitude);
+                if (parkLot.RemainingTime.Minutes < 10)
+                {
+                    icon = BitmapDescriptorFactory.FromResource(Resource.Drawable.marker1);
+                    icon = BitmapDescriptorFactory.DefaultMarker(BitmapDescriptorFactory.HueRed);
+                    rectOptions.Add(latLong);
+                }
+                else if (parkLot.RemainingTime.Minutes  >= 10 && parkLot.RemainingTime.Minutes < 20)
+                {
+
+                    icon = BitmapDescriptorFactory.FromResource(Resource.Drawable.bluemarker);
+                    icon = BitmapDescriptorFactory.DefaultMarker(BitmapDescriptorFactory.HueOrange);
+                }
+                else
+                {
+                    icon = BitmapDescriptorFactory.FromResource(Resource.Drawable.greenMarker);
+                    icon = BitmapDescriptorFactory.DefaultMarker(BitmapDescriptorFactory.HueGreen);
+                }
+
+
                 MarkerOptions mapOption = new MarkerOptions()
-                    .SetPosition(LocationForCustomIconMarkers[i])
-                    .InvokeIcon(icon)
-                    .SetSnippet(String.Format("This is marker for .", LocationName[i]))
-                    .SetTitle(String.Format("Marker {0}",LocationName[i])); 
+                    .SetPosition(latLong)
+                       .InvokeIcon(icon)
+                    .SetSnippet(String.Format("You are at {0} .", parkLot.AreaName))                    
+                    .SetTitle(String.Format("Remaining time:{0} Minutes , Started @ {1} , ending @ {2}", parkLot.RemainingTime.Minutes ,parkLot.StartTime.ToShortTimeString(),parkLot.EndTime.ToShortTimeString ())); 
+                    
                 _map.AddMarker(mapOption);
-                rectOptions.Add(LocationForCustomIconMarkers[i]);
+             
 
             }
             
-            _map.AddPolyline(rectOptions);
+           _map.AddPolyline(rectOptions);
         }
         private void SetupMapIfNeeded()
         {
@@ -194,10 +225,11 @@ namespace DeviceLocator
                 if (_map != null)
                 {
                     AddCustomMarkersToMap();
-                    AddInitialPolarBarToMap();
+                   // AddInitialPolarBarToMap();
 
                     // Move the map so that it is showing the markers we added above.
-                    _map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(LocationForCustomIconMarkers[3], 4));
+                    LatLng latLong = new LatLng(parkingSlots[3].Latitude, parkingSlots[3].Longitude);
+                    _map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(latLong, 25));
                 }
             }
         }
