@@ -22,5 +22,7 @@ namespace DeviceLocator.Core
                 return EndTime - StartTime;
             }
         }
+
+        public List<int> AdjustantSlots { get; set; }
     }
 }

@@ -49,13 +49,50 @@ namespace DeviceLocator
         private Marker _polarBearMarker;
         private GroundOverlay _polarBearOverlay;
         private List<ParkingLocation> parkingSlots = null;
+        private List<ParkingLocation> path = null;
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             SetContentView(Resource.Layout.Main);
-            DeviceLocatorManager manager = new DeviceLocatorManager();
+          //  DeviceLocatorManager manager = new DeviceLocatorManager();
 
-            parkingSlots = manager.InitializeParkingLocationsParking();
+//parkingSlots = manager.InitializeParkingLocationsParking();
+            parkingSlots = DistanceCalculator.InitializeSlots();
+
+            List<ParkingLocation> allotedSlots = new List<ParkingLocation>();
+
+            allotedSlots = parkingSlots.FindAll(m => m.RemainingTime.Minutes < 10);
+           path = new List<ParkingLocation>();
+
+
+            ParkingLocation currentSlot = parkingSlots[7];
+            currentSlot.AreaName = "My location";
+            path.Add(currentSlot);
+
+            double shortestDistance = 0;
+            int i = 0;
+            while (path.Count != allotedSlots.Count + 1)
+            {
+                foreach (ParkingLocation park in allotedSlots)
+                {
+                    if (!path.Contains(park))
+                    {
+                        double distance = DistanceCalculator.FindDistance(currentSlot, park);
+                        if (i == 0)
+                        {
+                            shortestDistance = distance;
+                        }
+                        else if (distance < shortestDistance)
+                        {
+                            currentSlot = park;
+                            path.Add(park);
+                            break;
+                        }
+                        i++;
+                    }
+                }
+            }
+
             InitMapFragment();
            SetupMapIfNeeded();
              
@@ -79,7 +116,7 @@ namespace DeviceLocator
             SetupMapIfNeeded();
 
             _map.MyLocationEnabled = true;
-
+           
             // Setup a handler for when the user clicks on a marker.
            // _map.MarkerClick += MapOnMarkerClick;
         }
@@ -92,15 +129,17 @@ namespace DeviceLocator
           //  _mapFragment = FragmentManager.FindFragmentByTag("map") as MapFragment;
              _mapFragment = FragmentManager.FindFragmentById<MapFragment>(Resource.Id.mapOverLay);
             GoogleMap map1 = _mapFragment.Map;
-            //if (map1 != null)
-            //{
-            //    map1.MapType = GoogleMap.MapTypeSatellite;
-            //}
+            if (map1 != null)
+            {
+             //   map1.MapType = GoogleMap.MapTypeSatellite;
+                map1.UiSettings.ZoomControlsEnabled = true;
+                map1.UiSettings.CompassEnabled = true;
+            }
             if (_mapFragment == null)
             {
                 GoogleMapOptions mapOptions = new GoogleMapOptions()
-                    .InvokeMapType(GoogleMap.MapTypeSatellite)
-                    .InvokeZoomControlsEnabled(false)
+                    .InvokeMapType(GoogleMap.MapTypeNormal)
+                    .InvokeZoomControlsEnabled(true)
                     .InvokeCompassEnabled(true);
 
                 FragmentTransaction fragTx = FragmentManager.BeginTransaction();
@@ -173,12 +212,7 @@ namespace DeviceLocator
         /// </summary>
         private void AddCustomMarkersToMap()
         {
-            PolylineOptions rectOptions = new PolylineOptions()
-            .InvokeColor(Color.Red.ToArgb())
-             .InvokeWidth(5)
-             .InvokeZIndex(10)
-             .Geodesic(true);
-
+            
             BitmapDescriptor icon = null;
             for (int i = 0; i < parkingSlots.Count ; i++)
             {
@@ -189,7 +223,7 @@ namespace DeviceLocator
                 {
                     icon = BitmapDescriptorFactory.FromResource(Resource.Drawable.marker1);
                     icon = BitmapDescriptorFactory.DefaultMarker(BitmapDescriptorFactory.HueRed);
-                    rectOptions.Add(latLong);
+                  //  rectOptions.Add(latLong);
                 }
                 else if (parkLot.RemainingTime.Minutes  >= 10 && parkLot.RemainingTime.Minutes < 20)
                 {
@@ -215,7 +249,25 @@ namespace DeviceLocator
 
             }
             
-           _map.AddPolyline(rectOptions);
+           
+        }
+
+        private void AddPath()
+        {
+            PolylineOptions rectOptions = new PolylineOptions()
+                .InvokeColor(Color.Red.ToArgb())
+                 .InvokeWidth(5)
+                 .InvokeZIndex(10)
+                 .Geodesic(true);
+
+            foreach (ParkingLocation parkLot in path)
+            {
+                LatLng latLong = new LatLng(parkLot.Latitude, parkLot.Longitude);
+                rectOptions.Add(latLong);
+            }
+
+            _map.AddPolyline(rectOptions);
+
         }
         private void SetupMapIfNeeded()
         {
@@ -226,10 +278,10 @@ namespace DeviceLocator
                 {
                     AddCustomMarkersToMap();
                    // AddInitialPolarBarToMap();
-
+                    AddPath();
                     // Move the map so that it is showing the markers we added above.
-                    LatLng latLong = new LatLng(parkingSlots[3].Latitude, parkingSlots[3].Longitude);
-                    _map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(latLong, 25));
+                    LatLng latLong = new LatLng(path[0].Latitude, path[0].Longitude);
+                    _map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(latLong, 45));
                 }
             }
         }

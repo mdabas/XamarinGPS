@@ -466,37 +466,37 @@ namespace DeviceLocator.Core
         public void RearrangeTimings(ref List<ParkingLocation> parkingLots)
         {
             Random random = new Random();
-          List<int> indices = RandomiseData(parkingLots.Count);
+            List<int> indices = RandomiseData(parkingLots.Count);
 
             //List<int> indices = new List<int>() {7,0, 2,5,6,4,1,3,8};
 
             for (int i = 0; i < indices.Count; i++)
-            { 
-                      
-            ParkingLocation parkLocation = parkingLots[indices[i]] ;
-            parkLocation.StartTime = DateTime.Now;
-            if (indices[i] == 1 || indices[i] == 3)
             {
-                parkLocation.AmountPaid = 30;
-             
-            }
-            else if (indices[i] == 2 || indices[i] == 5 || indices[i] == 7)
-            {
-                parkLocation.AmountPaid = 20;
-            }
-            else if (indices[i] == 4 || indices[i] == 8)
-            {
-                parkLocation.AmountPaid = 50;
-            }
-            else
-            {
-                parkLocation.AmountPaid = 10;
-            }
-            parkLocation.EndTime = CalculateEndTime(parkLocation.StartTime, parkLocation.AmountPaid);
+
+                ParkingLocation parkLocation = parkingLots[indices[i]];
+                parkLocation.StartTime = DateTime.Now;
+                if (indices[i] == 1 || indices[i] == 3 || indices[i] % 5 == 0)
+                {
+                    parkLocation.AmountPaid = 30;
+
+                }
+                else if (indices[i] == 2 || indices[i] == 5 || indices[i] == 7 || indices[i] % 2 == 0)
+                {
+                    parkLocation.AmountPaid = 20;
+                }
+                else if (indices[i] == 4 || indices[i] == 8 || indices[i] % 3 == 0)
+                {
+                    parkLocation.AmountPaid = 50;
+                }
+                else
+                {
+                    parkLocation.AmountPaid = 10;
+                }
+                parkLocation.EndTime = CalculateEndTime(parkLocation.StartTime, parkLocation.AmountPaid);
             }
 
 
-        
+
         }
 
 
@@ -513,6 +513,8 @@ namespace DeviceLocator.Core
             List<int> randomized = numbers.OrderBy(x => random.Next()).ToList();
             return randomized;
         }
+
+
 
     }
 }

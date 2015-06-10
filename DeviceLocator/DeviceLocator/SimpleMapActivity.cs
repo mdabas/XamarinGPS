@@ -115,7 +115,7 @@ namespace DeviceLocator
             }
         }
 
-         Location _currentLocation;
+        Location _currentLocation;
         LocationManager _locationManager;
 
         String _locationProvider;

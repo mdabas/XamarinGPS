@@ -73,12 +73,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeviceLocatorManager.cs" />
+    <Compile Include="DistanceCalculator.cs" />
     <Compile Include="LookAndFeelActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="ParkingLocation.cs" />
     <Compile Include="SimpleMapActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SlotDistance.cs" />
     <Compile Include="StaticMapActivity.cs" />
   </ItemGroup>
   <ItemGroup>
