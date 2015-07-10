@@ -22,3 +22,4 @@ E:\work\DeviceLocator\DeviceLocator\obj\Debug\res\drawable\marker2.png
 E:\work\DeviceLocator\DeviceLocator\obj\Debug\R.cs.flag
 E:\work\DeviceLocator\DeviceLocator\obj\Debug\uploadflags.txt
 E:\work\DeviceLocator\DeviceLocator\obj\Debug\DeviceLocator.csprojResolveAssemblyReference.cache
+C:\Git\XamarinGPS\DeviceLocator\DeviceLocator\obj\Debug\DeviceLocator.csprojResolveAssemblyReference.cache
